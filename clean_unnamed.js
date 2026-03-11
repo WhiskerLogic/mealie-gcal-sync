@@ -27,8 +27,19 @@ async function wipeClean() {
 
         const events = gRes.data.items || [];
         for (const event of events) {
-            console.log(`🗑️ Removing Calendar event: ${event.summary}`);
-            await calendar.events.delete({ calendarId: CALENDAR_ID, eventId: event.id });
+            try {
+                console.log(`🗑️ Removing Calendar event: ${event.summary}`);
+                await calendar.events.delete({ 
+                    calendarId: CALENDAR_ID, 
+                    eventId: event.id 
+                });
+                // Small delay to avoid hitting API rate limits
+                await new Promise(r => setTimeout(r, 200)); 
+            } catch (e) {
+                console.error(`⚠️ Failed to delete ${event.id}, skipping. Error: ${e.message}`);
+                // Continue to the next event even if this one fails
+                continue;
+            }
         }
 
         console.log("✨ Cleanup Finished.");
