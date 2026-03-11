@@ -7,7 +7,8 @@ const path = require('path');
 const env = fs.readFileSync('/usr/local/bin/common_keys.txt', 'utf8');
 const tokenMatch = env.match(/MEALIE_API_KEY=["']?([^"'\s]+)["']?/);
 const MEALIE_TOKEN = tokenMatch ? tokenMatch[1].trim() : null;
-const MEALIE_URL = "http://127.0.0.1:9925";
+const MEALIE_URL = "http://127.0.0.1:9925"; // Used for API calls
+const MEALIE_PUBLIC_URL = "https://mealie.wooller.com"; // Used for Calendar links
 const headers = { 'Authorization': `Bearer ${MEALIE_TOKEN}` };
 
 const KEYFILEPATH = path.join(__dirname, 'credentials.json');
@@ -78,7 +79,7 @@ async function syncMaster() {
                 calendarId: CALENDAR_ID,
                 resource: {
                     summary: planName,
-                    description: `MEALIE_ID: ${plan.id}\n${plan.recipe ? MEALIE_URL + '/recipe/' + plan.recipe.slug : ''}`,
+                    description: `MEALIE_ID: ${plan.id}\n${plan.recipe ? MEALIE_PUBLIC_URL + '/recipe/' + plan.recipe.slug : ''}`,
                     start: { date: planDate },
                     end: { date: planDate }
                 }
@@ -158,3 +159,4 @@ async function syncMaster() {
 
 
 syncMaster().catch(console.error);
+
