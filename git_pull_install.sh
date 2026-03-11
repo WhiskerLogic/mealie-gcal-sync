@@ -47,14 +47,16 @@ if [ -f "$DEST_DIR/$SERVICE_NAME.service" ]; then
 fi
 
 # 5. Restart the Service
-echo "🔄 Restarting $SERVICE_NAME..."
+echo "🔄 Running mealie-sync..."
+sudo systemctl daemon-reload
+# Restart triggers the script immediately
 sudo systemctl restart "$SERVICE_NAME"
 
-# Verify status
-if systemctl is-active --quiet "$SERVICE_NAME"; then
-    echo "✅ $SERVICE_NAME is running from $DEST_DIR."
+# Check if the restart command succeeded (exit code 0)
+if [ $? -eq 0 ]; then
+    echo "✅ $SERVICE_NAME triggered successfully."
 else
-    echo "❌ $SERVICE_NAME failed to start. Check 'journalctl -u $SERVICE_NAME'"
+    echo "❌ $SERVICE_NAME failed to trigger."
 fi
 
 log "✅ Mealie integration update complete (Run from $DEST_DIR)."
