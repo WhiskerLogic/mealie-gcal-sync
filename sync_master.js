@@ -1,5 +1,5 @@
 const axios = require('axios');
-const { MEALIE_URL, MEALIE_PUBLIC_URL, CALENDAR_ID, calendar, headers } = require('./config');
+const { MEALIE_URL, MEALIE_PUBLIC_URL, CALENDAR_ID, calendar, headers, buildEventTimes, getCalendarTimezone } = require('./config');
 
 const delay = ms => new Promise(res => setTimeout(res, ms));
 
@@ -12,6 +12,9 @@ async function syncMaster() {
     const endStr = end.toISOString().split('T')[0];
 
     console.log(`🔄 Master Sync: ${startStr} to ${endStr}`);
+
+    const timezone = await getCalendarTimezone();
+    console.log(`🕐 Using timezone: ${timezone}`);
 
     // --- FETCH DATA ---
     const mealieRes = await axios.get(`${MEALIE_URL}/api/households/mealplans`, {
@@ -53,15 +56,13 @@ async function syncMaster() {
                     await delay(200);
                 }
             } else if (planName) {
-                console.log(`⬆️  Pushing new entry to GCal: ${planName} (${planDate})`);
+                console.log(`⬆️  Pushing new entry to GCal: ${planName} (${planDate}, ${plan.entryType || 'all-day'})`);
                 const newEv = await calendar.events.insert({
                     calendarId: CALENDAR_ID,
                     resource: {
                         summary: planName,
-                        // FIXED URL PATH HERE:
                         description: `MEALIE_ID: ${plan.id}\n${plan.recipe ? MEALIE_PUBLIC_URL + '/g/home/r/' + plan.recipe.slug : ''}`,
-                        start: { date: planDate },
-                        end: { date: planDate }
+                        ...buildEventTimes(planDate, plan.entryType, timezone),
                     }
                 });
                 processedGCalIds.add(newEv.data.id);

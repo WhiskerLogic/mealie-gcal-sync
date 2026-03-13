@@ -1,5 +1,5 @@
 const axios = require('axios');
-const { MEALIE_URL, CALENDAR_ID, calendar, headers } = require('./config');
+const { MEALIE_URL, CALENDAR_ID, calendar, headers, buildEventTimes, getCalendarTimezone } = require('./config');
 
 async function syncBothWays() {
     const todayStr = new Date().toISOString().split('T')[0];
@@ -8,6 +8,8 @@ async function syncBothWays() {
     const nextWeekStr = nextWeek.toISOString().split('T')[0];
 
     console.log(`🔄 Syncing window: ${todayStr} to ${nextWeekStr}`);
+
+    const timezone = await getCalendarTimezone();
 
     // --- 1. FETCH DATA FROM BOTH SIDES ---
     const mealiePlansRes = await axios.get(`${MEALIE_URL}/api/households/mealplans`, {
@@ -46,8 +48,7 @@ async function syncBothWays() {
             const eventBody = {
                 summary: planName,
                 description: plan.recipe ? `${MEALIE_URL}/recipe/${plan.recipe.slug}` : "Added via Mealie",
-                start: { date: planDate },
-                end: { date: planDate },
+                ...buildEventTimes(planDate, plan.entryType, timezone),
             };
 
             await calendar.events.insert({
