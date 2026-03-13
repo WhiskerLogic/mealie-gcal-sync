@@ -1,13 +1,7 @@
-const { google } = require('googleapis');
-const path = require('path');
 const dns = require('node:dns');
+const { CALENDAR_ID, calendar } = require('./config');
 
 dns.setDefaultResultOrder('ipv4first');
-
-const CALENDAR_ID = 'd399fd6624bd772ba4cefdec02b2c9f9ac2bdc97db3bd556c072c8e57b0ad8b7@group.calendar.google.com';
-const KEYFILEPATH = path.join(__dirname, 'credentials.json');
-const auth = new google.auth.GoogleAuth({ keyFile: KEYFILEPATH, scopes: ['https://www.googleapis.com/auth/calendar'] });
-const calendar = google.calendar({ version: 'v3', auth });
 
 const OLD_PATH = "/recipe/";
 const NEW_PATH = "/g/home/r/";

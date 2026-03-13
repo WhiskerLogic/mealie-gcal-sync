@@ -1,12 +1,5 @@
 const axios = require('axios');
-const fs = require('fs');
-
-// --- CONFIGURATION ---
-const env = fs.readFileSync('/usr/local/bin/common_keys.txt', 'utf8');
-const tokenMatch = env.match(/MEALIE_API_KEY=["']?([^"'\s]+)["']?/);
-const MEALIE_TOKEN = tokenMatch ? tokenMatch[1].trim() : null;
-const MEALIE_URL = "http://127.0.0.1:9925";
-const headers = { 'Authorization': `Bearer ${MEALIE_TOKEN}` };
+const { MEALIE_URL, headers } = require('./config');
 
 async function deleteDuplicates() {
     console.log("🔍 Fetching library to find duplicates ending in (1)...");

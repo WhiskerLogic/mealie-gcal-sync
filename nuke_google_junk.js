@@ -1,17 +1,6 @@
-const { google } = require('googleapis');
-const path = require('path');
-const fs = require('fs');
-
-const KEYFILEPATH = path.join(__dirname, 'credentials.json');
-const CALENDAR_ID = 'd399fd6624bd772ba4cefdec02b2c9f9ac2bdc97db3bd556c072c8e57b0ad8b7@group.calendar.google.com';
-
-const auth = new google.auth.GoogleAuth({
-    keyFile: KEYFILEPATH,
-    scopes: ['https://www.googleapis.com/auth/calendar']
-});
+const { CALENDAR_ID, calendar } = require('./config');
 
 async function nukeJunk() {
-    const calendar = google.calendar({ version: 'v3', auth });
     
     console.log("🔍 Searching for 'Unnamed Meal' entries...");
     

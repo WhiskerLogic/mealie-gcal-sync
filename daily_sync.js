@@ -1,25 +1,7 @@
 const axios = require('axios');
-const fs = require('fs');
-const { google } = require('googleapis');
-const path = require('path');
-
-// --- CONFIG ---
-const env = fs.readFileSync('/usr/local/bin/common_keys.txt', 'utf8');
-const tokenMatch = env.match(/MEALIE_API_KEY=["']?([^"'\s]+)["']?/);
-const MEALIE_TOKEN = tokenMatch ? tokenMatch[1].trim() : null;
-const MEALIE_URL = "http://127.0.0.1:9925";
-const headers = { 'Authorization': `Bearer ${MEALIE_TOKEN}` };
-
-const KEYFILEPATH = path.join(__dirname, 'credentials.json');
-// Note: Scope changed to 'calendar' (read/write) instead of 'calendar.readonly'
-const auth = new google.auth.GoogleAuth({ 
-    keyFile: KEYFILEPATH, 
-    scopes: ['https://www.googleapis.com/auth/calendar'] 
-});
-const CALENDAR_ID = 'd399fd6624bd772ba4cefdec02b2c9f9ac2bdc97db3bd556c072c8e57b0ad8b7@group.calendar.google.com';
+const { MEALIE_URL, CALENDAR_ID, calendar, headers } = require('./config');
 
 async function syncBothWays() {
-    const calendar = google.calendar({ version: 'v3', auth });
     const todayStr = new Date().toISOString().split('T')[0];
     const nextWeek = new Date();
     nextWeek.setDate(nextWeek.getDate() + 7);
