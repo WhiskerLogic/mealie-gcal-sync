@@ -1,5 +1,5 @@
 const axios = require('axios');
-const { MEALIE_URL, MEALIE_PUBLIC_URL, CALENDAR_ID, calendar, headers, buildEventTimes, getCalendarTimezone } = require('./config');
+const { MEALIE_URL, MEALIE_PUBLIC_URL, CALENDAR_ID, DEDUPE_SAME_MEAL_TYPE, calendar, headers, buildEventTimes, getCalendarTimezone } = require('./config');
 
 const delay = ms => new Promise(res => setTimeout(res, ms));
 
@@ -20,7 +20,11 @@ async function syncMaster() {
     const mealieRes = await axios.get(`${MEALIE_URL}/api/households/mealplans`, {
         params: { start_date: startStr, end_date: endStr }, headers
     });
-    const mealiePlans = mealieRes.data.items || [];
+    let mealiePlans = mealieRes.data.items || [];
+
+    if (DEDUPE_SAME_MEAL_TYPE) {
+        mealiePlans = dedupeMealPlans(mealiePlans);
+    }
 
     const gRes = await calendar.events.list({
         calendarId: CALENDAR_ID,
@@ -139,6 +143,21 @@ async function syncMaster() {
     }
 
     console.log("✨ Sync Finished.");
+}
+
+function dedupeMealPlans(plans) {
+    const seen = new Set();
+    const deduped = plans.filter(plan => {
+        const recipeId = plan.recipe?.id;
+        if (!recipeId) return true;
+        const key = `${plan.date}|${plan.entryType}|${recipeId}`;
+        if (seen.has(key)) return false;
+        seen.add(key);
+        return true;
+    });
+    const removed = plans.length - deduped.length;
+    if (removed) console.log(`🔀 Deduped ${removed} duplicate meal(s) (same date + type + recipe)`);
+    return deduped;
 }
 
 syncMaster().catch(console.error)

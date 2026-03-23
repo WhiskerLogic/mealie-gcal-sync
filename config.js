@@ -5,6 +5,7 @@ const path = require('path');
 const MEALIE_URL = process.env.MEALIE_URL || 'http://127.0.0.1:9925';
 const MEALIE_PUBLIC_URL = process.env.MEALIE_PUBLIC_URL || 'https://mealie.wooller.com';
 const CALENDAR_ID = process.env.GOOGLE_CALENDAR_ID;
+const DEDUPE_SAME_MEAL_TYPE = true; // deduplicate meals with the same date, type, and recipe.
 
 const keyFile = process.env.GOOGLE_CREDENTIALS_PATH || path.join(__dirname, 'credentials.json');
 const auth = new google.auth.GoogleAuth({
@@ -47,6 +48,6 @@ async function getCalendarTimezone() {
 }
 
 module.exports = {
-    MEALIE_URL, MEALIE_PUBLIC_URL, CALENDAR_ID, calendar, headers,
-    MEAL_TIMES, buildEventTimes, getCalendarTimezone,
+    MEALIE_URL, MEALIE_PUBLIC_URL, CALENDAR_ID, DEDUPE_SAME_MEAL_TYPE,
+    calendar, headers, MEAL_TIMES, buildEventTimes, getCalendarTimezone,
 };
