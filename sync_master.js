@@ -37,12 +37,9 @@ async function syncMaster() {
             const planDate = plan.date; 
             const planName = plan.recipe?.name || plan.title || plan.note || "Meal Plan Entry";
             
-            const existingGCalEvent = gEvents.find(g => {
-                const gDate = g.start.date || g.start.dateTime?.split('T')[0];
-                const hasId = g.description?.includes(`MEALIE_ID: ${plan.id}`);
-                const isSameDayAndName = (gDate === planDate && g.summary === planName);
-                return hasId || isSameDayAndName;
-            });
+            const existingGCalEvent =
+                gEvents.find(g => !processedGCalIds.has(g.id) && g.extendedProperties?.private?.mealie_meal_id === String(plan.id)) ||
+                gEvents.find(g => !processedGCalIds.has(g.id) && g.description?.includes(`MEALIE_ID: ${plan.id}`));
 
             if (existingGCalEvent) {
                 processedGCalIds.add(existingGCalEvent.id);
@@ -61,7 +58,8 @@ async function syncMaster() {
                     calendarId: CALENDAR_ID,
                     resource: {
                         summary: planName,
-                        description: `MEALIE_ID: ${plan.id}\n${plan.recipe ? MEALIE_PUBLIC_URL + '/g/home/r/' + plan.recipe.slug : ''}`,
+                        description: plan.recipe ? MEALIE_PUBLIC_URL + '/g/home/r/' + plan.recipe.slug : '',
+                        extendedProperties: { private: { mealie_meal_id: String(plan.id) } },
                         ...buildEventTimes(planDate, plan.entryType, timezone),
                     }
                 });
@@ -77,8 +75,8 @@ async function syncMaster() {
     for (const gEv of gEvents) {
         try {
             if (processedGCalIds.has(gEv.id)) continue;
-            const mealieIdMatch = gEv.description?.match(/MEALIE_ID: ([a-z0-9-]+)/);
-            if (mealieIdMatch) {
+            const isFromMealie = gEv.extendedProperties?.private?.mealie_meal_id || gEv.description?.includes("MEALIE_ID:");
+            if (isFromMealie) {
                 console.log(`🗑️  Removing orphaned GCal event: ${gEv.summary}`);
                 await calendar.events.delete({ calendarId: CALENDAR_ID, eventId: gEv.id });
                 await delay(200);
@@ -94,7 +92,7 @@ async function syncMaster() {
             if (processedGCalIds.has(gEv.id)) continue;
             
             const gDate = gEv.start.date || gEv.start.dateTime?.split('T')[0];
-            const isFromMealie = gEv.description?.includes("MEALIE_ID:");
+            const isFromMealie = gEv.extendedProperties?.private?.mealie_meal_id || gEv.description?.includes("MEALIE_ID:");
             const alreadyInMealie = mealiePlans.find(p => p.date === gDate);
 
             if (!isFromMealie && !alreadyInMealie) {
